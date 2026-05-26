@@ -1,0 +1,101 @@
+#!/usr/bin/env bats
+# Test suite for install.sh
+# Run with: bats tests/install.sh.test
+
+@test "install.sh has proper shebang" {
+  head -n 1 install.sh | grep -q "#!/bin/bash"
+}
+
+@test "install.sh passes ShellCheck validation" {
+  shellcheck install.sh
+}
+
+@test "install.sh has set -euo pipefail" {
+  grep -q "set -euo pipefail" install.sh
+}
+
+@test "install.sh has trap cleanup EXIT" {
+  grep -q "trap cleanup EXIT" install.sh
+}
+
+@test "install.sh has usage function" {
+  grep -q "^usage()" install.sh
+}
+
+@test "install.sh has log functions" {
+  grep -q "^log_info()" install.sh
+  grep -q "^log_error()" install.sh
+  grep -q "^log_warn()" install.sh
+  grep -q "^log_success()" install.sh
+}
+
+@test "install.sh has argument parsing" {
+  grep -q "parse_args()" install.sh
+}
+
+@test "install.sh has package manager detection" {
+  grep -q "detect_package_manager()" install.sh
+}
+
+@test "install.sh has help option" {
+  ./install.sh --help >/dev/null 2>&1
+}
+
+@test "install.sh --dry-run does not modify filesystem" {
+  temp_dir=$(mktemp -d)
+  cd "$temp_dir" || exit 1
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" --dry-run >/dev/null 2>&1
+  [ ! -d "$temp_dir/.ashell" ]
+  cd - || exit 1
+  rm -rf "$temp_dir"
+}
+
+@test "install.sh creates ~/.ashell directory" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -d "$temp_dir/.ashell" ]
+  rm -rf "$temp_dir"
+}
+
+@test "install.sh creates menu.sh" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -f "$temp_dir/.ashell/menu.sh" ]
+  rm -rf "$temp_dir"
+}
+
+@test "install.sh creates helpers.sh" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -f "$temp_dir/.ashell/helpers.sh" ]
+  rm -rf "$temp_dir"
+}
+
+@test "menu.sh is executable" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -x "$temp_dir/.ashell/menu.sh" ]
+  rm -rf "$temp_dir"
+}
+
+@test "helpers.sh is executable" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -x "$temp_dir/.ashell/helpers.sh" ]
+  rm -rf "$temp_dir"
+}
+
+@test "install.sh is idempotent (second run succeeds)" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -d "$temp_dir/.ashell" ]
+  rm -rf "$temp_dir"
+}
+
+@test "install.sh creates backup directory" {
+  temp_dir=$(mktemp -d)
+  HOME="$temp_dir" bash "$(dirname "$BATS_TEST_FILENAME")/../install.sh" >/dev/null 2>&1
+  [ -d "$temp_dir"/.dotfiles_backup.* ]
+  rm -rf "$temp_dir"
+}
