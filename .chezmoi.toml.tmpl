@@ -1,0 +1,37 @@
+# Chezmoi Configuration Template
+# Manages dotfiles with templating, encryption, and multi-machine support
+# 
+# Usage:
+#   chezmoi init https://github.com/themerchantstoretms-dev/Ashell-Dotfiles.git
+#   chezmoi apply
+#   chezmoi edit  # Modify dotfiles
+#   chezmoi diff  # See pending changes
+#   chezmoi apply # Apply changes
+
+[data]
+  # Machine-specific variables
+  hostname = {{ .hostname }}
+  os = {{ .chezmoi.os }}
+  osRelease = {{ .chezmoi.osRelease | toJson }}
+  
+  # iOS terminal detection
+  isAshell = {{ env "ASHELL" | not | not }}
+  isIsh = {{ env "ISH" | not | not }}
+
+[encrypt "age"]
+  # Use age for file encryption
+  # Generate key: age-keygen -o -f ~/.config/age/key.txt
+  identity = "~/.config/age/key.txt"
+  recipient = "age1..."  # Set to your public key
+
+[dryRun]
+  # Safe preview mode
+  format = "# {{- .path }}"
+
+[scriptlets]
+  # Custom hooks for environment-specific setup
+
+[.chezmoiignore]
+  # Files to ignore during apply
+  "*.test"
+  "README.md"
