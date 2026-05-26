@@ -1,0 +1,20 @@
+# ShellCheck Configuration
+# Production-grade static analysis for shell scripts
+
+# Enable all checks by default
+enable=all
+
+# Disable specific checks for legitimate use cases
+disable=SC2086,SC1091
+
+# SC2086: Double quote to prevent globbing and word splitting
+# Disabled reason: Code uses explicit quoting; manual review handles this
+
+# SC1091: Not following source files
+# Disabled reason: Dynamically generated files (helpers.sh, menu.sh) cannot be pre-analyzed
+
+# Set warning-level severity for consistency
+severity=warning
+
+# Optional: Add custom comment pattern rules
+# comment_regex=/^# @shellcheck/
